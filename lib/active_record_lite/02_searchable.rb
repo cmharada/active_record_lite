@@ -4,7 +4,7 @@ require_relative '01_sql_object'
 module Searchable
   def where(params)
     where_criterion = params.map do |col, val|
-      value = val.is_a?(String) ? "\"#{ val }\"" : val.to_s
+      value = val.is_a?(String) ? "\"#{ val }\"" : val
       " #{ col.to_s } = #{ value }"
     end
     sql_results = DBConnection.execute(<<-SQL)
@@ -15,9 +15,7 @@ module Searchable
     WHERE
       #{ where_criterion.join(" AND ") }
     SQL
-    sql_results.map do |hash|
-      self.new(hash)
-    end
+    sql_results.map { |hash| self.new(hash) }
   end
 end
 

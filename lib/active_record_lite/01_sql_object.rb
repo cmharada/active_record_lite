@@ -10,7 +10,7 @@ class SQLObject
         SELECT
           *
         FROM
-        #{ self.table_name }
+          #{ self.table_name }
       SQL
       @columns = cols.first.map do |column|
         column.to_sym
@@ -50,13 +50,7 @@ class SQLObject
   end
 
   def self.parse_all(results)
-    results.map do |row|
-      next_obj = self.new
-      row.each do |column, value|
-        next_obj.send("#{ column.to_sym }=", value)
-      end
-      next_obj
-    end
+    results.map { |row| self.new(row) }
   end
 
   def self.find(id)
@@ -79,12 +73,14 @@ class SQLObject
   def insert
     col_names = self.class.columns.map { |c| c.to_s }
     col_names.delete("id")
+    
     values = attribute_values.compact.map do |el|
-      el.is_a?(String) ? "\'#{ el.to_s }\'" : el.to_s
+      el.is_a?(String) ? "\'#{ el.to_s }\'" : el
     end.join(",")
+    
     DBConnection.execute(<<-SQL)
     INSERT INTO
-      #{ self.class.table_name} (#{ col_names.join(",") }) 
+      #{ self.class.table_name } (#{ col_names.join(",") }) 
     VALUES 
       (#{ values })
     SQL
@@ -108,16 +104,16 @@ class SQLObject
   def update
     set_values = self.class.columns.map do |col|
       el = self.send(col.to_s)
-      value = el.is_a?(String) ? "\'#{ el }'" : el.to_s
+      value = el.is_a?(String) ? "\'#{ el }'" : el
       "#{ col.to_s } = #{ value }"
     end
     DBConnection.execute(<<-SQL)
     UPDATE
-    #{ self.class.table_name }
+      #{ self.class.table_name }
     SET
-    #{ set_values.join(",") }
+      #{ set_values.join(",") }
     WHERE
-    id = #{ self.id }
+      id = #{ self.id }
     SQL
   end
 
