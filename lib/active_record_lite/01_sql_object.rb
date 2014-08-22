@@ -5,15 +5,18 @@ require 'active_support/inflector'
 
 class SQLObject
   def self.columns
-    cols = DBConnection.execute2(<<-SQL)
-      SELECT
-        *
-      FROM
-      #{ self.table_name }
-    SQL
-    cols.first.map do |column|
-      column.to_sym
+    if @columns.nil?
+      cols = DBConnection.execute2(<<-SQL)
+        SELECT
+          *
+        FROM
+        #{ self.table_name }
+      SQL
+      @columns = cols.first.map do |column|
+        column.to_sym
+      end
     end
+    @columns
   end
 
   def self.finalize!
